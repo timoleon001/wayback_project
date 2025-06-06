@@ -8,17 +8,17 @@ import re
 
 # Настройки скрипта
 WAYBACK_REQUEST_DELAY = 2  # Задержка между запросами к Wayback Machine (в секундах)
-SHEETS_REQUEST_DELAY = 1  # Задержка между запросами к Google Sheets API (в секундах)
-GOOGLE_API_RETRY_DELAY = 10  # Задержка между попытками при ошибке Google API (в секундах)
-REQUEST_TIMEOUT = 120  # Таймаут для HTTP-запросов
+WAYBACK_RETRY_DELAY = 10    # Задержка между повторными попытками при ошибке Wayback Machine (в секундах)
+SHEETS_REQUEST_DELAY = 1   # Задержка между запросами к Google Sheets API (в секундах)
+GOOGLE_API_RETRY_DELAY = 90  # Задержка между попытками при ошибке Google API (в секундах)
+REQUEST_TIMEOUT = 90  # Таймаут для HTTP-запросов
 WAYBACK_LIMIT = 3  # Максимальное количество последних снимков из Wayback Machine
 MAX_RETRIES = 5  # Максимальное количество попыток при ошибке запроса
 GOOGLE_API_MAX_RETRIES = 3  # Максимальное количество попыток при ошибке Google API
-BATCH_SIZE = 10 # Размер пакета для записи в Google Sheets (можно менять)
+BATCH_SIZE = 10  # Размер пакета для записи в Google Sheets (можно менять)
 WAYBACK_CDX_URL_TEMPLATE = "https://web.archive.org/cdx/search/cdx?url={domain}&output=json&limit={limit}&fl=timestamp&filter=statuscode:200&sort=desc"
 WAYBACK_SNAPSHOT_URL_TEMPLATE = "https://web.archive.org/web/{timestamp}/http://{domain}/"
-SPREADSHEET_URL = ("https://docs.google.com/spreadsheets/d/11PRL7WHEWC9vzYEPglbXYq_UX-xA0GXokfslBYKerZ2M1/edit?gid=0"
-                   "#gid=0")
+SPREADSHEET_URL = "https://docs.google.com/spreadsheets/d/11PRL7WHEWC9vzYEPglbXYq_UX-xA0GXokfslBYKerZ2M1/edit?gid=0#gid=0"
 LOG_FILE = "wayback_script.log"  # Путь к лог-файлу
 LOG_LEVEL = "INFO"  # Уровень логирования - DEBUG INFO WARNING ERROR CRITICAL
 
@@ -116,9 +116,9 @@ for worksheet in spreadsheet.worksheets():
                         print(f"Лист {escaped_title}, строка {row_idx}: {error_message}")
                         logging.error(f"Лист {escaped_title}, строка {row_idx}: {error_message}")
                         raise
-                    print(f"Лист {escaped_title}, строка {row_idx}: попытка {attempt + 1} не удалась, жду {WAYBACK_REQUEST_DELAY} секунд...")
+                    print(f"Лист {escaped_title}, строка {row_idx}: попытка {attempt + 1} не удалась, жду {WAYBACK_RETRY_DELAY} секунд...")
                     logging.warning(f"Лист {escaped_title}, строка {row_idx}: попытка {attempt + 1} не удалась: {str(e)}")
-                    time.sleep(WAYBACK_REQUEST_DELAY)
+                    time.sleep(WAYBACK_RETRY_DELAY)
 
             # Проверка наличия снимков
             if len(data) <= 1 or not data[1]:
@@ -142,9 +142,9 @@ for worksheet in spreadsheet.worksheets():
                             print(f"Лист {escaped_title}, строка {row_idx}: {error_message}")
                             logging.error(f"Лист {escaped_title}, строка {row_idx}: {error_message}")
                             raise
-                        print(f"Лист {escaped_title}, строка {row_idx}: попытка {attempt + 1} не удалась, жду {WAYBACK_REQUEST_DELAY} секунд...")
+                        print(f"Лист {escaped_title}, строка {row_idx}: попытка {attempt + 1} не удалась, жду {WAYBACK_RETRY_DELAY} секунд...")
                         logging.warning(f"Лист {escaped_title}, строка {row_idx}: попытка {attempt + 1} не удалась: {str(e)}")
-                        time.sleep(WAYBACK_REQUEST_DELAY)
+                        time.sleep(WAYBACK_RETRY_DELAY)
 
                 soup = BeautifulSoup(response.text, 'html.parser')
                 title_tag = soup.find('title')
