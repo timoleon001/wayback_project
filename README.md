@@ -1,130 +1,130 @@
-# Wayback Script
+# Скрипт Wayback
 
-This script retrieves archived webpage titles from the Wayback Machine and writes them to a Google Sheets spreadsheet. It processes domains listed in the first column of the spreadsheet, queries the Wayback Machine for the latest snapshots (up to 3 by default), extracts the `<title>` content from the oldest snapshot, and writes it to the last available column. The process is logged, with data saved to the `wayback_script.log` file.
+Этот скрипт извлекает заголовки архивных веб-страниц из Wayback Machine и записывает их в таблицу Google Sheets. Он обрабатывает домены, указанные в таблице в первом столбце, запрашивает у Wayback Machine последние (по умолчанию 3) снимка и извлекает содержимое тега `<title>` из самого старого из них, записывая его в последнюю доступную колонку. Процесс логируется, и данные сохраняются в файл `wayback_script.log`.
 
-## Features
-- Retrieves up to 3 snapshots per domain from the Wayback Machine.
-- Extracts the `<title>` from the oldest snapshot.
-- Writes results to a Google Sheets spreadsheet in batches (default batch size: 5 domains).
-- Includes detailed logging for debugging and monitoring.
-- Handles errors gracefully (e.g., timeouts, missing titles, API quota limits).
+## Особенности
+- Извлекает до 3 снимков для каждого домена из Wayback Machine.
+- Извлекает `<title>` из самого старого снимка.
+- Записывает результаты в таблицу Google Sheets пакетами (по умолчанию 5 доменов).
+- Включает подробное логирование для отладки и мониторинга.
+- Обработка ошибок (например, таймауты, отсутствующие заголовки, лимиты API).
 
-## Prerequisites
-- **Python 3.6+**: Ensure Python 3 is installed on your system.
-- **Google Sheets API Credentials**:
-  - You need a `credentials.json` file to authenticate with the Google Sheets API.
-  - **How to obtain `credentials.json`**:  
-    1. Go to the [Google Cloud Console](https://console.cloud.google.com/).
-    2. Create a new project (or select an existing one).
-    3. Enable the Google Sheets API and Google Drive API:  
-       - Navigate to "APIs & Services" > "Library".  
-       - Search for "Google Sheets API" and "Google Drive API", and enable both.
-    4. Create a service account:  
-       - Go to "IAM & Admin" > "Service Accounts".  
-       - Click "Create Service Account", fill in the details, and create.  
-       - Grant the service account "Editor" role (or assign specific roles for Sheets and Drive).  
-       - After creation, click on the service account, go to the "Keys" tab, and click "Add Key" > "Create new key".  
-       - Select "JSON" format and download the key file—this is your `credentials.json`.  
-    5. Place the `credentials.json` file in the project directory.
-    6. Share your Google Sheet with the service account email (e.g., `sheets-editor@your-project-id.iam.gserviceaccount.com`) with Editor permissions.
-- **Internet Access**: Required for querying the Wayback Machine and Google Sheets API.
+## Требования
+- **Python 3.6+**: Убедитесь, что на вашей системе установлен Python 3.
+- **Учетные данные Google Sheets API**:
+  - Вам нужен файл `credentials.json` для аутентификации в Google Sheets API.
+  - **Как получить `credentials.json`**:
+    1. Перейдите в [Google Cloud Console](https://console.cloud.google.com/).
+    2. Создайте новый проект (или выберите существующий).
+    3. Включите Google Sheets API и Google Drive API:
+       - Перейдите в "APIs & Services" > "Library".
+       - Найдите "Google Sheets API" и "Google Drive API" и включите оба API.
+    4. Создайте сервисный аккаунт:
+       - Перейдите в "IAM & Admin" > "Service Accounts".
+       - Нажмите "Create Service Account", заполните данные и создайте.
+       - Назначьте сервисному аккаунту роль "Editor" (или конкретные роли для Sheets и Drive).
+       - После создания выберите сервисный аккаунт, перейдите на вкладку "Keys", нажмите "Add Key" > "Create new key".
+       - Выберите формат "JSON" и скачайте файл ключа — это ваш `credentials.json`.
+    5. Поместите файл `credentials.json` в директорию проекта.
+    6. Поделитесь своей таблицей Google Sheets с email сервисного аккаунта (например, `sheets-editor@your-project-id.iam.gserviceaccount.com`) с правами редактора.
+- **Доступ к интернету**: Требуется для запросов к Wayback Machine и Google Sheets API.
 
-## Installation
-1. **Clone or Download the Script**:
-   - Save the script as `wayback_script.py` in a project directory (e.g., `~/wayback_project`).
+## Установка
+1. **Скачивание скрипта**:
+   - Сохраните скрипт как `wayback_script.py` в директорию проекта (например, `~/wayback_project`).
 
-2. **Install Dependencies**:
-   - Install required Python libraries:
+2. **Установка зависимостей**:
+   - Установите необходимые библиотеки Python:
      ```bash
      pip install gspread google-auth requests beautifulsoup4
      ```
-   - Optionally, use a virtual environment:
+   - Опционально, используйте виртуальное окружение:
      ```bash
      python3 -m venv venv
      source venv/bin/activate
      pip install gspread google-auth requests beautifulsoup4
      ```
 
-3. **Set Up Google Sheets**:
-   - Ensure your spreadsheet URL is correctly set in the script (`SPREADSHEET_URL`).
-   - The spreadsheet should have at least one sheet with domains listed in the first column (starting from row 2, row 1 is assumed to be a header).
+3. **Настройка Google Sheets**:
+   - Убедитесь, что URL вашей таблицы правильно указан в скрипте (`SPREADSHEET_URL`).
+   - Таблица должна содержать хотя бы один лист с доменами в первом столбце (начиная с строки 2, строка 1 считается заголовком).
 
-4. **Add `credentials.json`**:
-   - Place the `credentials.json` file in the same directory as the script.
+4. **Добавление `credentials.json`**:
+   - Поместите файл `credentials.json` в ту же директорию, где находится скрипт.
 
-## Usage
-1. **Run the Script**:
-   - Navigate to the project directory:
+## Использование
+1. **Запуск скрипта**:
+   - Перейдите в директорию проекта:
      ```bash
      cd ~/wayback_project
      ```
-   - If using a virtual environment, activate it:
+   - Если используется виртуальное окружение, активируйте его:
      ```bash
      source venv/bin/activate
      ```
-   - Run the script:
+   - Запустите скрипт:
      ```bash
      python3 wayback_script.py
      ```
 
-2. **Check Results**:
-   - Results are written to the Google Sheet in the first empty column for each domain.
-   - If a title is found, it’s written as-is. If not, an error message is recorded (e.g., "нет доступных снимков", "Ошибка: не удалось извлечь <title>", or "N/A").
+2. **Проверка результатов**:
+   - Результаты записываются в первый пустой столбец таблицы Google Sheets для каждого домена.
+   - Если заголовок найден, он записывается как есть. Если нет, записывается сообщение об ошибке (например, "нет доступных снимков", "Ошибка: не удалось извлечь <title>" или "N/A").
 
-3. **View Logs**:
-   - Logs are saved to `wayback_script.log` in the project directory.
-   - Check this file for detailed information on the script’s execution, including errors and warnings.
+3. **Просмотр логов**:
+   - Логи сохраняются в файл `wayback_script.log` в директории проекта.
+   - Проверьте этот файл для получения подробной информации о выполнении скрипта, включая ошибки и предупреждения.
 
-## Running on a Server
-1. **Connect to the Server**:
-   - Use SSH to connect:
+## Запуск на сервере
+1. **Подключение к серверу**:
+   - Используйте SSH для подключения:
      ```bash
      ssh username@server_ip
      ```
 
-2. **Set Up the Environment**:
-   - Install Python and dependencies (see Installation section above).
-   - Upload the script and `credentials.json` to the server:
+2. **Настройка окружения**:
+   - Установите Python и зависимости (см. раздел Установка выше).
+   - Загрузите скрипт и `credentials.json` на сервер:
      ```bash
      scp wayback_script.py credentials.json username@server_ip:~/wayback_project/
      ```
 
-3. **Run the Script**:
-   - Follow the same steps as in the Usage section.
-   - To run in the background:
+3. **Запуск скрипта**:
+   - Следуйте тем же шагам, что в разделе Использование.
+   - Для фонового запуска:
      ```bash
      nohup python3 wayback_script.py &
      ```
 
-4. **Automate with Cron** (optional):
-   - Schedule the script to run daily at 8 AM:
+4. **Автоматизация с помощью Cron** (опционально):
+   - Настройте запуск скрипта ежедневно в 8 утра:
      ```bash
      crontab -e
      ```
-     Add the following line:
+     Добавьте следующую строку:
      ```bash
      0 8 * * * /bin/bash -c 'cd ~/wayback_project && source venv/bin/activate && python3 wayback_script.py >> ~/wayback_project/cron.log 2>&1'
      ```
 
-## Troubleshooting
-- **"Permission Denied" for Google Sheets**:
-  - Ensure the service account email has Editor access to the spreadsheet.
+## Устранение неполадок
+- **"Permission Denied" для Google Sheets**:
+  - Убедитесь, что email сервисного аккаунта имеет права редактора для таблицы.
 - **"HTTPSConnectionPool... Read timed out"**:
-  - Increase `REQUEST_TIMEOUT` or `WAYBACK_REQUEST_DELAY` in the script.
-  - Check your internet connection.
-- **"Quota Exceeded" (Google Sheets API Error 429)**:
-  - The script automatically waits 60 seconds and retries.
-  - Increase `SHEETS_REQUEST_DELAY` or reduce `BATCH_SIZE` to lower the request rate.
-- **Log File Encoding Issues**:
-  - The script uses UTF-8 encoding. Ensure your text editor uses UTF-8 when viewing `wayback_script.log`.
+  - Увеличьте `REQUEST_TIMEOUT` или `WAYBACK_REQUEST_DELAY` в скрипте.
+  - Проверьте ваше интернет-соединение.
+- **"Quota Exceeded" (ошибка Google Sheets API 429)**:
+  - Скрипт автоматически ждёт 60 секунд и повторяет попытку.
+  - Увеличьте `SHEETS_REQUEST_DELAY` или уменьшите `BATCH_SIZE`, чтобы снизить частоту запросов.
+- **Проблемы с кодировкой лог-файла**:
+  - Скрипт использует кодировку UTF-8. Убедитесь, что ваш текстовый редактор использует UTF-8 при просмотре `wayback_script.log`.
 
-## Limitations
-- **Google Sheets API Quotas**:
-  - Free tier limits: ~60 requests per minute per user.
-  - With `BATCH_SIZE = 5`, you can process ~200–250 domains per minute safely.
-- **Wayback Machine Access**:
-  - The script may encounter timeouts if the Wayback Machine is slow or rate-limits your IP.
-  - Adjust `MAX_RETRIES` and `WAYBACK_REQUEST_DELAY` as needed.
+## Ограничения
+- **Квоты Google Sheets API**:
+  - Бесплатный тариф: ~60 запросов в минуту на пользователя.
+  - При `BATCH_SIZE = 5` можно безопасно обработать ~200–250 доменов в минуту.
+- **Доступ к Wayback Machine**:
+  - Скрипт может столкнуться с таймаутами, если Wayback Machine работает медленно или ограничивает ваш IP.
+  - Настройте `MAX_RETRIES` и `WAYBACK_REQUEST_DELAY` при необходимости.
 
-## License
-This script is provided as-is for personal use. Modify and distribute as needed.
+## Лицензия
+Скрипт предоставляется как есть для личного использования. Модифицируйте и распространяйте по необходимости.
